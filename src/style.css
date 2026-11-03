@@ -139,3 +139,6 @@ button { color: inherit; }
 .plugin-install-row { margin-top: 14px; }
 .plugin-security { padding-top: 10px; border-top: 1px solid #263242; font-size: 9px; }
 @media (max-width: 600px) { .plugin-dialog { padding: 16px; } .plugin-install-row { align-items: flex-start; flex-direction: column; } }
+
+.plugin-card-actions { display: flex; gap: 6px; flex: 0 0 auto; }
+.plugin-remove { color: #e4a2a2; border-color: #65404a; background: #2a1b23; }
