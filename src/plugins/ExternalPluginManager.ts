@@ -101,7 +101,7 @@ export class ExternalPluginManager {
   }
 
   private save() {
-    try { localStorage.setItem(storageKey, JSON.stringify([...this.packages.values()])); }
+    try { localStorage.setItem(storageKey, JSON.stringify([...this.packages.entries()].map(([id, pkg]) => ({ pkg, enabled: this.enabled.has(id) })))); }
     catch { this.host.notify('Plugin storage is full; changes may not persist.'); }
   }
 
@@ -109,10 +109,15 @@ export class ExternalPluginManager {
     try {
       const raw = localStorage.getItem(storageKey);
       if (!raw) return;
-      const packages = JSON.parse(raw) as DeclarativePluginPackage[];
-      if (!Array.isArray(packages)) return;
-      for (const pkg of packages.slice(0, 30)) {
-        try { await this.install(pkg, false); } catch (error) { console.warn('Skipped invalid plugin package', error); }
+      const saved = JSON.parse(raw) as Array<DeclarativePluginPackage | { pkg: DeclarativePluginPackage; enabled: boolean }>;
+      if (!Array.isArray(saved)) return;
+      for (const item of saved.slice(0, 30)) {
+        const pkg = 'pkg' in item ? item.pkg : item;
+        const shouldEnable = !('pkg' in item) || item.enabled;
+        try {
+          await this.install(pkg, false);
+          if (!shouldEnable) await this.disable(pkg.manifest.id);
+        } catch (error) { console.warn('Skipped invalid plugin package', error); }
       }
     } catch { this.host.notify('Could not restore installed plugins.'); }
   }
