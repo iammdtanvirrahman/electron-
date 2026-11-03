@@ -3,9 +3,12 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { PluginManager } from './plugins/PluginManager';
+import type { ElectronPluginApi } from './plugins/types';
+import primitivePack from './plugins/examples/primitive-pack';
 
 type Quality = 'low' | 'balanced' | 'high';
-type Primitive = 'box' | 'sphere' | 'cylinder' | 'cone';
+type Primitive = 'box' | 'sphere' | 'cylinder' | 'cone' | 'torus';
 
 const viewport = document.querySelector<HTMLDivElement>('#viewport')!;
 const loadingOverlay = document.querySelector<HTMLDivElement>('#loading-overlay')!;
@@ -98,11 +101,12 @@ function createGeometry(type: Primitive): THREE.BufferGeometry {
     case 'sphere': return new THREE.SphereGeometry(0.8, 32, 20);
     case 'cylinder': return new THREE.CylinderGeometry(0.55, 0.55, 1.5, 32, 1);
     case 'cone': return new THREE.ConeGeometry(0.7, 1.5, 32, 1);
+    case 'torus': return new THREE.TorusGeometry(0.72, 0.24, 16, 48);
     default: return new THREE.BoxGeometry(1.4, 1.4, 1.4, 1, 1, 1);
   }
 }
 
-function createObject(type: Primitive) {
+function createObject(type: Primitive): THREE.Mesh {
   const material = new THREE.MeshStandardMaterial({
     color: type === 'box' ? '#758cae' : type === 'sphere' ? '#b17c62' : type === 'cylinder' ? '#6b9a8b' : '#b69b62',
     roughness: 0.65,
@@ -118,7 +122,91 @@ function createObject(type: Primitive) {
   selectObject(mesh);
   renderSceneList();
   notify(`${mesh.name} created`);
+  return mesh;
 }
+
+
+const pluginList = document.querySelector<HTMLDivElement>('#plugin-list')!;
+const pluginTools = document.querySelector<HTMLDivElement>('#plugin-tools')!;
+const pluginManager = new PluginManager({
+  scene: {
+    addPrimitive: (kind) => createObject(kind as Primitive),
+    getObjectCount: () => objects.length,
+  },
+  ui: { notify },
+  tools: { register: () => { throw new Error('Plugin tools must be registered through the Plugin Manager.'); } },
+});
+
+function renderPluginPanel() {
+  const installed = pluginManager.list();
+  pluginList.replaceChildren();
+  if (!installed.length) {
+    pluginList.textContent = 'No plugins installed.';
+  }
+  for (const item of installed) {
+    const card = document.createElement('div');
+    card.className = 'plugin-card';
+    const info = document.createElement('div');
+    info.className = 'plugin-info';
+    const name = document.createElement('strong');
+    name.textContent = item.manifest.name;
+    const description = document.createElement('span');
+    description.textContent = `${item.manifest.description} · v${item.manifest.version}`;
+    info.append(name, description);
+    const toggle = document.createElement('button');
+    toggle.className = 'plugin-action';
+    toggle.textContent = item.enabled ? 'Disable' : 'Enable';
+    toggle.addEventListener('click', async () => {
+      try {
+        if (item.enabled) await pluginManager.disable(item.manifest.id);
+        else await pluginManager.enable(item.manifest.id);
+        renderPluginPanel();
+        notify(`${item.manifest.name} ${item.enabled ? 'disabled' : 'enabled'}`);
+      } catch (error) {
+        notify(error instanceof Error ? error.message : 'Plugin action failed');
+      }
+    });
+    card.append(info, toggle);
+    pluginList.append(card);
+  }
+
+  pluginTools.replaceChildren();
+  const tools = pluginManager.listTools();
+  if (!tools.length) {
+    const empty = document.createElement('div');
+    empty.className = 'plugin-empty';
+    empty.textContent = 'Enabled plugins can add tools here.';
+    pluginTools.append(empty);
+  }
+  for (const tool of tools) {
+    const button = document.createElement('button');
+    button.className = 'plugin-tool';
+    button.textContent = tool.name;
+    button.title = tool.description;
+    button.addEventListener('click', async () => {
+      try { await pluginManager.runTool(tool.id); }
+      catch (error) { notify(error instanceof Error ? error.message : 'Plugin tool failed'); }
+    });
+    pluginTools.append(button);
+  }
+}
+
+document.querySelector<HTMLButtonElement>('#open-plugins')!.addEventListener('click', () => {
+  document.querySelector<HTMLDivElement>('#plugin-modal')!.classList.add('open');
+  renderPluginPanel();
+});
+document.querySelector<HTMLButtonElement>('#close-plugins')!.addEventListener('click', () => {
+  document.querySelector<HTMLDivElement>('#plugin-modal')!.classList.remove('open');
+});
+document.querySelector<HTMLButtonElement>('#install-demo-plugin')!.addEventListener('click', async () => {
+  try {
+    await pluginManager.install(primitivePack);
+    renderPluginPanel();
+    notify('Primitive Pack installed');
+  } catch (error) {
+    notify(error instanceof Error ? error.message : 'Plugin installation failed');
+  }
+});
 
 function selectObject(mesh: THREE.Mesh | null) {
   selected = mesh;
@@ -358,4 +446,5 @@ resize();
 renderOnce();
 loadingOverlay.classList.add('hidden');
 document.querySelector<HTMLSpanElement>('#renderer-status')!.textContent = 'WEBGL 2 · ON-DEMAND RENDER';
+void pluginManager.install(primitivePack).then(renderPluginPanel).catch((error) => console.error('Demo plugin failed:', error));
 notify('ELECTRON viewport initialized');
