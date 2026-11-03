@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#090b10" />
+    <meta name="description" content="ELECTRON — lightweight realtime 3D asset studio." />
+    <title>ELECTRON — 3D Asset Studio</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Electron home">
+          <span class="brand-mark">e</span>
+          <span class="brand-name">ELECTRON</span>
+          <span class="brand-divider"></span>
+          <span class="brand-subtitle">3D ASSET STUDIO</span>
+        </a>
+        <div class="topbar-center">
+          <span class="project-dot"></span>
+          <span id="project-name">Untitled project</span>
+          <span class="saved-label">LOCAL</span>
+        </div>
+        <div class="topbar-actions">
+          <button class="button button-quiet" id="reset-view">Reset view</button>
+          <button class="button button-primary" id="export-glb"><span>↓</span> Export GLB</button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <aside class="left-panel">
+          <div class="panel-heading"><span>CREATE</span><span class="panel-kicker">OBJECTS</span></div>
+          <div class="tool-grid">
+            <button class="tool-button" data-create="box"><span class="tool-icon">▰</span><span>Cube</span></button>
+            <button class="tool-button" data-create="sphere"><span class="tool-icon">◉</span><span>Sphere</span></button>
+            <button class="tool-button" data-create="cylinder"><span class="tool-icon">▤</span><span>Cylinder</span></button>
+            <button class="tool-button" data-create="cone"><span class="tool-icon">△</span><span>Cone</span></button>
+          </div>
+
+          <div class="panel-section">
+            <div class="panel-heading"><span>TRANSFORM</span></div>
+            <div class="mode-row">
+              <button class="mode-button active" data-mode="translate" title="Move (G)">Move</button>
+              <button class="mode-button" data-mode="rotate" title="Rotate (R)">Rotate</button>
+              <button class="mode-button" data-mode="scale" title="Scale (S)">Scale</button>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <div class="panel-heading"><span>SCENE</span><span id="object-count" class="panel-kicker">0 OBJECTS</span></div>
+            <div id="scene-list" class="scene-list">
+              <div class="empty-list">Your scene is empty.<br/>Create an object to begin.</div>
+            </div>
+          </div>
+
+          <div class="panel-footer">
+            <span class="status-indicator"></span>
+            <span>WEBGL VIEWPORT READY</span>
+          </div>
+        </aside>
+
+        <section class="viewport-column">
+          <div class="viewport-toolbar">
+            <div class="viewport-label"><span class="live-dot"></span> PERSPECTIVE VIEW</div>
+            <div class="viewport-tools">
+              <button id="toggle-grid" class="icon-button active" title="Toggle grid">▦</button>
+              <button id="toggle-axes" class="icon-button active" title="Toggle axes">⌖</button>
+              <select id="quality-select" class="quality-select" aria-label="Viewport quality">
+                <option value="low">Performance</option>
+                <option value="balanced" selected>Balanced</option>
+                <option value="high">Quality</option>
+              </select>
+            </div>
+          </div>
+          <div id="viewport" class="viewport">
+            <div class="viewport-hint">左 DRAG ORBIT&nbsp;&nbsp; · &nbsp;&nbsp;RIGHT DRAG PAN&nbsp;&nbsp; · &nbsp;&nbsp;SCROLL ZOOM</div>
+            <div id="loading-overlay" class="loading-overlay">
+              <div class="loader-ring"></div>
+              <span>INITIALIZING VIEWPORT</span>
+            </div>
+          </div>
+          <div class="viewport-status">
+            <span id="selection-status">No object selected</span>
+            <span id="renderer-status">WEBGL 2 · REALTIME</span>
+          </div>
+        </section>
+
+        <aside class="right-panel">
+          <div class="panel-heading"><span>INSPECTOR</span><span class="panel-kicker">PROPERTIES</span></div>
+          <section class="inspector-section">
+            <div class="section-title">OBJECT</div>
+            <label class="field-label" for="object-name">Name</label>
+            <input id="object-name" class="text-input" value="" placeholder="No object selected" disabled />
+            <div class="section-title spaced">TRANSFORM</div>
+            <div class="vector-field">
+              <label>POSITION</label>
+              <div class="vector-inputs">
+                <input id="pos-x" type="number" step="0.1" value="0" disabled aria-label="Position X"/>
+                <input id="pos-y" type="number" step="0.1" value="0" disabled aria-label="Position Y"/>
+                <input id="pos-z" type="number" step="0.1" value="0" disabled aria-label="Position Z"/>
+              </div>
+            </div>
+            <div class="vector-field">
+              <label>ROTATION</label>
+              <div class="vector-inputs">
+                <input id="rot-x" type="number" step="1" value="0" disabled aria-label="Rotation X"/>
+                <input id="rot-y" type="number" step="1" value="0" disabled aria-label="Rotation Y"/>
+                <input id="rot-z" type="number" step="1" value="0" disabled aria-label="Rotation Z"/>
+              </div>
+            </div>
+            <div class="vector-field">
+              <label>SCALE</label>
+              <div class="vector-inputs">
+                <input id="scale-x" type="number" step="0.1" value="1" disabled aria-label="Scale X"/>
+                <input id="scale-y" type="number" step="0.1" value="1" disabled aria-label="Scale Y"/>
+                <input id="scale-z" type="number" step="0.1" value="1" disabled aria-label="Scale Z"/>
+              </div>
+            </div>
+          </section>
+
+          <section class="inspector-section material-section">
+            <div class="section-title">MATERIAL</div>
+            <label class="field-label" for="material-color">Base color</label>
+            <div class="color-control">
+              <input id="material-color" type="color" value="#8b9bb4" disabled />
+              <span id="material-hex">#8B9BB4</span>
+            </div>
+            <label class="field-label range-label" for="roughness">Roughness <span id="roughness-value">0.65</span></label>
+            <input id="roughness" class="range-input" type="range" min="0" max="1" step="0.01" value="0.65" disabled />
+            <label class="field-label range-label" for="metalness">Metalness <span id="metalness-value">0.05</span></label>
+            <input id="metalness" class="range-input" type="range" min="0" max="1" step="0.01" value="0.05" disabled />
+          </section>
+
+          <div class="inspector-note">
+            <span class="note-icon">✦</span>
+            <span>Select an object to edit its geometry transform and PBR material.</span>
+          </div>
+        </aside>
+      </main>
+      <div id="toast" class="toast" role="status"></div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
