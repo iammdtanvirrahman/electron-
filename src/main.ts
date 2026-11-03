@@ -6,7 +6,7 @@ import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { PluginManager } from './plugins/PluginManager';
 import type { ElectronPluginApi } from './plugins/types';
 import primitivePack from './plugins/examples/primitive-pack';
-import { SandboxPluginHost, type ExternalPluginPackage } from './plugins/SandboxPluginHost';
+import { IsolatedPluginHost, type ExternalPluginPackage } from './plugins/IsolatedPluginHost';
 import { marketplacePackages } from './plugins/marketplace';
 
 type Quality = 'low' | 'balanced' | 'high';
@@ -139,7 +139,7 @@ const pluginManager = new PluginManager({
   tools: { register: () => { throw new Error('Plugin tools must be registered through the Plugin Manager.'); } },
 });
 
-const sandboxPlugins = new SandboxPluginHost({
+const sandboxPlugins = new IsolatedPluginHost({
   addPrimitive: (kind) => createObject(kind as Primitive),
   getObjectCount: () => objects.length,
   notify,
@@ -193,6 +193,41 @@ function renderPluginPanel() {
     pluginList.append(card);
   }
 
+  for (const item of sandboxPlugins.list()) {
+    const card = document.createElement('div');
+    card.className = 'plugin-card';
+    const info = document.createElement('div');
+    info.className = 'plugin-info';
+    const name = document.createElement('strong');
+    name.textContent = item.manifest.name + ' · Isolated';
+    const description = document.createElement('span');
+    description.textContent = item.manifest.description + ' · v' + item.manifest.version;
+    info.append(name, description);
+    const actions = document.createElement('div');
+    actions.className = 'plugin-card-actions';
+    const toggle = document.createElement('button');
+    toggle.className = 'plugin-action';
+    toggle.textContent = item.enabled ? 'Disable' : 'Enable';
+    toggle.addEventListener('click', async () => {
+      try {
+        if (item.enabled) await sandboxPlugins.disable(item.manifest.id);
+        else await sandboxPlugins.enable(item.manifest.id);
+        renderPluginPanel();
+      } catch (error) { notify(error instanceof Error ? error.message : 'Plugin action failed'); }
+    });
+    const remove = document.createElement('button');
+    remove.className = 'plugin-action plugin-remove';
+    remove.textContent = 'Remove';
+    remove.addEventListener('click', async () => {
+      await sandboxPlugins.uninstall(item.manifest.id);
+      renderPluginPanel();
+      notify('Plugin removed');
+    });
+    actions.append(toggle, remove);
+    card.append(info, actions);
+    pluginList.append(card);
+  }
+
   pluginTools.replaceChildren();
   const tools = pluginManager.listTools();
   if (!tools.length) {
@@ -212,6 +247,18 @@ function renderPluginPanel() {
     });
     pluginTools.append(button);
   }
+  for (const tool of sandboxPlugins.listTools()) {
+    const button = document.createElement('button');
+    button.className = 'plugin-tool';
+    button.textContent = tool.name;
+    button.title = tool.description;
+    button.addEventListener('click', async () => {
+      try { await sandboxPlugins.runTool(tool.id); }
+      catch (error) { notify(error instanceof Error ? error.message : 'Plugin tool failed'); }
+    });
+    pluginTools.append(button);
+  }
+  renderMarketplace();
 }
 
 
