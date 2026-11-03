@@ -142,3 +142,8 @@ button { color: inherit; }
 
 .plugin-card-actions { display: flex; gap: 6px; flex: 0 0 auto; }
 .plugin-remove { color: #e4a2a2; border-color: #65404a; background: #2a1b23; }
+
+.marketplace-list { display: grid; gap: 7px; }
+.marketplace-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 12px; border: 1px solid #293646; border-radius: 7px; background: #141e2b; }
+.file-button { display: inline-flex; align-items: center; cursor: pointer; }
+.marketplace-card button:disabled { opacity: .45; cursor: default; }
