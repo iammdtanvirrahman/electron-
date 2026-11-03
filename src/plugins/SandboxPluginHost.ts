@@ -67,10 +67,10 @@ export class SandboxPluginHost {
     frame.setAttribute('sandbox', 'allow-scripts');
     frame.setAttribute('aria-hidden', 'true');
     frame.style.cssText = 'position:fixed;width:0;height:0;border:0;left:-10000px;top:-10000px';
-    const code = JSON.stringify(record.pkg.code).replace(/</g, '\\u003c');
+    const code = record.pkg.code.replace(/<\\/script/gi, '<\\\\/script');
     frame.srcdoc = `<!doctype html><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; connect-src 'none'; img-src data:; style-src 'unsafe-inline'"><script>
       (() => {
-        const source = ${code};
+        const activate = (${code});
         const tools = new Map();
         let seq = 0;
         const pending = new Map();
