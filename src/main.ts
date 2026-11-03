@@ -6,6 +6,8 @@ import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { PluginManager } from './plugins/PluginManager';
 import type { ElectronPluginApi } from './plugins/types';
 import primitivePack from './plugins/examples/primitive-pack';
+import { ExternalPluginManager } from './plugins/ExternalPluginManager';
+import type { DeclarativePluginPackage } from './plugins/ExternalPluginManager';
 
 import { marketplacePackages } from './plugins/marketplace';
 
