@@ -156,3 +156,6 @@ button { color: inherit; }
 .quick-scale-row { display: flex; justify-content: space-between; align-items: center; margin: 12px 0 5px; color: #6f7e93; font: 8px var(--mono); letter-spacing: .08em; }
 .quick-scale-row output { color: #83ddec; font: 9px var(--mono); }
 .quick-scale-input { display: block; margin: 0; }
+
+.scale-mode-hint { margin: 9px 0 0; padding: 8px; border: 1px solid #315c6b; border-radius: 5px; background: #142832; color: #8eddeb; font: 8px/1.6 var(--mono); letter-spacing: .035em; }
+.scale-mode-hint[hidden] { display: none; }
