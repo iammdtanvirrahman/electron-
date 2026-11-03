@@ -1,46 +1,31 @@
-import type { ExternalPluginPackage } from './SandboxPluginHost';
+import type { DeclarativePluginPackage } from './ExternalPluginManager';
 
-export const marketplacePackages: ExternalPluginPackage[] = [
+export const marketplacePackages: DeclarativePluginPackage[] = [
   {
     manifest: {
       id: 'community.shape-tools',
       name: 'Shape Tools',
       version: '1.0.0',
-      description: 'Adds extra primitive creation tools.',
+      description: 'Adds torus and cone creation tools.',
       author: 'ELECTRON Community',
-      permissions: ['scene:write', 'ui:notify'],
+      permissions: ['scene:write'],
     },
-    code: `(api) => {
-      api.tools.register({
-        id: 'add-torus',
-        name: 'Add Torus',
-        description: 'Create a donut-shaped mesh',
-        run: async () => {
-          await api.scene.addPrimitive('torus');
-          await api.ui.notify('Torus created');
-        }
-      });
-    }`,
+    tools: [
+      { id: 'add-torus', name: 'Add Torus', description: 'Create a donut-shaped mesh.', action: 'add-primitive', primitive: 'torus' },
+      { id: 'add-cone', name: 'Add Cone', description: 'Create a cone mesh.', action: 'add-primitive', primitive: 'cone' }
+    ]
   },
   {
     manifest: {
       id: 'community.scene-inspector',
       name: 'Scene Inspector',
       version: '1.0.0',
-      description: 'Reports the current scene object count.',
+      description: 'Reports how many objects are in the current scene.',
       author: 'ELECTRON Community',
-      permissions: ['scene:read', 'ui:notify'],
+      permissions: ['scene:read'],
     },
-    code: `(api) => {
-      api.tools.register({
-        id: 'count-objects',
-        name: 'Count Scene Objects',
-        description: 'Show the number of scene objects',
-        run: async () => {
-          const count = await api.scene.getObjectCount();
-          await api.ui.notify('Scene contains ' + count + ' objects');
-        }
-      });
-    }`,
-  },
+    tools: [
+      { id: 'count-objects', name: 'Count Scene Objects', description: 'Show the number of objects in the scene.', action: 'count-objects' }
+    ]
+  }
 ];
