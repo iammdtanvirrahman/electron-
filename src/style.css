@@ -147,3 +147,12 @@ button { color: inherit; }
 .marketplace-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 12px; border: 1px solid #293646; border-radius: 7px; background: #141e2b; }
 .file-button { display: inline-flex; align-items: center; cursor: pointer; }
 .marketplace-card button:disabled { opacity: .45; cursor: default; }
+
+/* Uniform and quick scaling controls */
+.scale-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.scale-heading > label:first-child { margin: 0; color: #6f7e93; font: 8px var(--mono); letter-spacing: .08em; }
+.uniform-toggle { display: inline-flex; align-items: center; gap: 5px; color: #9aacc1; font-size: 9px; cursor: pointer; }
+.uniform-toggle input { width: 13px; height: 13px; margin: 0; accent-color: #5bc9e1; cursor: pointer; }
+.quick-scale-row { display: flex; justify-content: space-between; align-items: center; margin: 12px 0 5px; color: #6f7e93; font: 8px var(--mono); letter-spacing: .08em; }
+.quick-scale-row output { color: #83ddec; font: 9px var(--mono); }
+.quick-scale-input { display: block; margin: 0; }
