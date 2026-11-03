@@ -118,7 +118,8 @@ function createObject(type: Primitive): THREE.Mesh {
   });
   const mesh = new THREE.Mesh(createGeometry(type), material);
   mesh.name = `${type[0].toUpperCase()}${type.slice(1)}_${objects.length + 1}`;
-  mesh.position.set((objects.length % 3) * 1.7 - 1.7, 0.8, Math.floor(objects.length / 3) * 1.7);
+  // Spawn every new object at the world origin.
+  mesh.position.set(0, 0, 0);
   mesh.castShadow = false;
   mesh.receiveShadow = false;
   scene.add(mesh);
