@@ -110,6 +110,15 @@ let uniformScale = true;
 let scaleDragStart: THREE.Vector3 | null = null;
 let scaleBase: THREE.Vector3 | null = null;
 
+function updateScaleGizmoMode() {
+  const uniformScaleMode = uniformScale && transform.getMode() === 'scale';
+  // Uniform mode uses the single Quick Scale control instead of three axis handles.
+  transform.getHelper().visible = !uniformScaleMode;
+  const hint = document.querySelector<HTMLParagraphElement>('#scale-mode-hint');
+  if (hint) hint.hidden = !uniformScaleMode;
+  renderOnce();
+}
+
 transform.addEventListener('objectChange', () => {
   if (selected && transform.getMode() === 'scale' && uniformScale && scaleDragStart) {
     const start = scaleDragStart;
@@ -366,6 +375,7 @@ function selectObject(mesh: THREE.Mesh | null) {
   if (quickScaleValue) quickScaleValue.textContent = '1.00×';
   transform.detach();
   if (mesh) transform.attach(mesh);
+  updateScaleGizmoMode();
   updateInspector();
   renderSceneList();
   renderOnce();
@@ -476,7 +486,8 @@ bindVectorInputs('scale');
 
 document.querySelector<HTMLInputElement>('#uniform-scale')!.addEventListener('change', (event) => {
   uniformScale = (event.currentTarget as HTMLInputElement).checked;
-  notify(uniformScale ? 'Uniform scaling enabled' : 'Independent axis scaling enabled');
+  updateScaleGizmoMode();
+  notify(uniformScale ? 'Uniform scaling enabled — use Quick Scale' : 'Independent axis scaling enabled');
 });
 
 document.querySelector<HTMLInputElement>('#quick-scale')!.addEventListener('input', (event) => {
@@ -521,6 +532,7 @@ for (const button of document.querySelectorAll<HTMLButtonElement>('[data-mode]')
   button.addEventListener('click', () => {
     const mode = button.dataset.mode as 'translate' | 'rotate' | 'scale';
     transform.setMode(mode);
+    updateScaleGizmoMode();
     document.querySelectorAll('[data-mode]').forEach((item) => item.classList.toggle('active', item === button));
   });
 }
@@ -596,6 +608,7 @@ window.addEventListener('keydown', (event) => {
   if (event.key.toLowerCase() === 'g') transform.setMode('translate');
   if (event.key.toLowerCase() === 'r') transform.setMode('rotate');
   if (event.key.toLowerCase() === 's') transform.setMode('scale');
+  updateScaleGizmoMode();
   if (event.key === 'Escape') selectObject(null);
   if (event.key === 'Delete' && selected) {
     const removed = selected;
