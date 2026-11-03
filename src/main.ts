@@ -199,7 +199,7 @@ function renderPluginPanel() {
     const info = document.createElement('div');
     info.className = 'plugin-info';
     const name = document.createElement('strong');
-    name.textContent = item.manifest.name + ' · Isolated';
+    name.textContent = item.manifest.name + ' · Restricted API';
     const description = document.createElement('span');
     description.textContent = item.manifest.description + ' · v' + item.manifest.version;
     info.append(name, description);
