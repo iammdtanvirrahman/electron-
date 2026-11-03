@@ -30,7 +30,7 @@ const renderer = new THREE.WebGLRenderer({
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.15;
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.1));
 renderer.domElement.className = 'scene-canvas';
 viewport.prepend(renderer.domElement);
 
@@ -256,7 +256,7 @@ for (const button of document.querySelectorAll<HTMLButtonElement>('[data-mode]')
 }
 
 renderer.domElement.addEventListener('pointerdown', (event) => {
-  if (transform.dragging) return;
+  if (transform.dragging || transform.axis !== null) return;
   const rect = renderer.domElement.getBoundingClientRect();
   pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
