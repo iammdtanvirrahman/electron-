@@ -141,11 +141,11 @@
       <div id="plugin-modal" class="plugin-modal" role="dialog" aria-modal="true" aria-labelledby="plugin-title">
         <div class="plugin-dialog">
           <div class="plugin-dialog-header"><div><div class="section-title">EXTENSIONS</div><h2 id="plugin-title">Plugin Manager</h2></div><button id="close-plugins" class="icon-button" aria-label="Close plugin manager">×</button></div>
-          <p class="plugin-intro">Install trusted extensions from the catalog or import a .json plugin package. External plugins execute in an isolated iframe with a restricted API.</p>
+          <p class="plugin-intro">Install trusted extensions from the catalog or import a .json plugin package. External packages use a restricted, declarative API. They cannot run arbitrary JavaScript.</p>
           <div class="plugin-subheading">INSTALLED PLUGINS</div><div id="plugin-list" class="plugin-list"></div>
           <div class="plugin-subheading">COMMUNITY MARKETPLACE</div><div id="marketplace-list" class="marketplace-list"></div>\n          <div class="plugin-install-row"><div><strong>Install external package</strong><span>Import a developer-supplied .json plugin package</span></div><label class="button button-quiet file-button" for="plugin-file">Choose package</label><input id="plugin-file" type="file" accept=".json,application/json" hidden /></div>\n          <div class="plugin-subheading">PLUGIN TOOLS</div><div id="plugin-tools" class="plugin-tools"></div>
           <div class="plugin-install-row"><div><strong>Bundled developer sample</strong><span>Primitive Pack · trusted built-in example</span></div><button id="install-demo-plugin" class="button button-primary">Install sample</button></div>
-          <p class="plugin-security">Sandboxing limits DOM access and network connections. Review third-party source before installing; browser sandboxing is defense-in-depth, not a guarantee against every exploit.</p>
+          <p class="plugin-security">External packages can only call the built-in actions listed in their manifest. They cannot execute uploaded JavaScript. Review package metadata before installing.</p>
         </div>
       </div>
       <div id="toast" class="toast" role="status"></div>
