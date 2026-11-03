@@ -166,7 +166,22 @@ function renderPluginPanel() {
         notify(error instanceof Error ? error.message : 'Plugin action failed');
       }
     });
-    card.append(info, toggle);
+    const remove = document.createElement('button');
+    remove.className = 'plugin-action plugin-remove';
+    remove.textContent = 'Remove';
+    remove.addEventListener('click', async () => {
+      try {
+        await pluginManager.uninstall(item.manifest.id);
+        renderPluginPanel();
+        notify(`${item.manifest.name} removed`);
+      } catch (error) {
+        notify(error instanceof Error ? error.message : 'Plugin removal failed');
+      }
+    });
+    const actions = document.createElement('div');
+    actions.className = 'plugin-card-actions';
+    actions.append(toggle, remove);
+    card.append(info, actions);
     pluginList.append(card);
   }
 
