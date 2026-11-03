@@ -93,9 +93,37 @@ function notify(message: string) {
 orbit.addEventListener('change', renderOnce);
 transform.addEventListener('change', renderOnce);
 transform.addEventListener('dragging-changed', (event) => {
-  orbit.enabled = !(event as unknown as { value: boolean }).value;
+  const dragging = (event as unknown as { value: boolean }).value;
+  orbit.enabled = !dragging;
+  if (dragging && selected && transform.getMode() === 'scale') {
+    scaleDragStart = selected.scale.clone();
+  } else if (!dragging) {
+    scaleDragStart = null;
+    if (selected) scaleBase = selected.scale.clone();
+    const quickScale = document.querySelector<HTMLInputElement>('#quick-scale');
+    if (quickScale) quickScale.value = '1';
+    const quickScaleValue = document.querySelector<HTMLOutputElement>('#quick-scale-value');
+    if (quickScaleValue) quickScaleValue.textContent = '1.00×';
+  }
 });
+let uniformScale = true;
+let scaleDragStart: THREE.Vector3 | null = null;
+let scaleBase: THREE.Vector3 | null = null;
+
 transform.addEventListener('objectChange', () => {
+  if (selected && transform.getMode() === 'scale' && uniformScale && scaleDragStart) {
+    const start = scaleDragStart;
+    const current = selected.scale;
+    const ratios = [
+      current.x / Math.max(0.001, start.x),
+      current.y / Math.max(0.001, start.y),
+      current.z / Math.max(0.001, start.z),
+    ];
+    const changedAxis = ratios.reduce((best, ratio, index) =>
+      Math.abs(ratio - 1) > Math.abs(ratios[best] - 1) ? index : best, 0);
+    const factor = ratios[changedAxis];
+    selected.scale.set(start.x * factor, start.y * factor, start.z * factor);
+  }
   updateInspector();
   renderOnce();
 });
@@ -331,6 +359,11 @@ document.querySelector<HTMLButtonElement>('#install-demo-plugin')!.addEventListe
 
 function selectObject(mesh: THREE.Mesh | null) {
   selected = mesh;
+  scaleBase = mesh ? mesh.scale.clone() : null;
+  const quickScale = document.querySelector<HTMLInputElement>('#quick-scale');
+  if (quickScale) quickScale.value = '1';
+  const quickScaleValue = document.querySelector<HTMLOutputElement>('#quick-scale-value');
+  if (quickScaleValue) quickScaleValue.textContent = '1.00×';
   transform.detach();
   if (mesh) transform.attach(mesh);
   updateInspector();
@@ -380,7 +413,7 @@ function updateInspector() {
   colorInput.disabled = !enabled;
   roughnessInput.disabled = !enabled;
   metalnessInput.disabled = !enabled;
-  for (const id of ['pos-x','pos-y','pos-z','rot-x','rot-y','rot-z','scale-x','scale-y','scale-z']) {
+  for (const id of ['pos-x','pos-y','pos-z','rot-x','rot-y','rot-z','scale-x','scale-y','scale-z','uniform-scale','quick-scale']) {
     document.querySelector<HTMLInputElement>(`#${id}`)!.disabled = !enabled;
   }
   if (!selected) {
@@ -400,6 +433,7 @@ function updateInspector() {
   setField('scale-x', selected.scale.x, false);
   setField('scale-y', selected.scale.y, false);
   setField('scale-z', selected.scale.z, false);
+  document.querySelector<HTMLInputElement>('#uniform-scale')!.checked = uniformScale;
   const material = selected.material as THREE.MeshStandardMaterial;
   colorInput.value = `#${material.color.getHexString()}`;
   document.querySelector<HTMLSpanElement>('#material-hex')!.textContent = colorInput.value.toUpperCase();
@@ -418,7 +452,19 @@ function bindVectorInputs(prefix: 'pos' | 'rot' | 'scale') {
       if (!Number.isFinite(value)) return;
       if (prefix === 'pos') selected.position[axis] = value;
       if (prefix === 'rot') selected.rotation[axis] = THREE.MathUtils.degToRad(value);
-      if (prefix === 'scale') selected.scale[axis] = Math.max(0.001, value);
+      if (prefix === 'scale') {
+        const next = Math.max(0.001, value);
+        if (uniformScale) {
+          const factor = next / Math.max(0.001, selected.scale[axis]);
+          selected.scale.multiplyScalar(factor);
+        } else {
+          selected.scale[axis] = next;
+        }
+        scaleBase = selected.scale.clone();
+        const quickScale = document.querySelector<HTMLInputElement>('#quick-scale')!;
+        quickScale.value = '1';
+        document.querySelector<HTMLOutputElement>('#quick-scale-value')!.textContent = '1.00×';
+      }
       updateInspector();
       renderOnce();
     });
@@ -427,6 +473,21 @@ function bindVectorInputs(prefix: 'pos' | 'rot' | 'scale') {
 bindVectorInputs('pos');
 bindVectorInputs('rot');
 bindVectorInputs('scale');
+
+document.querySelector<HTMLInputElement>('#uniform-scale')!.addEventListener('change', (event) => {
+  uniformScale = (event.currentTarget as HTMLInputElement).checked;
+  notify(uniformScale ? 'Uniform scaling enabled' : 'Independent axis scaling enabled');
+});
+
+document.querySelector<HTMLInputElement>('#quick-scale')!.addEventListener('input', (event) => {
+  if (!selected) return;
+  const multiplier = Number((event.currentTarget as HTMLInputElement).value);
+  const base = scaleBase ?? selected.scale.clone();
+  selected.scale.set(base.x * multiplier, base.y * multiplier, base.z * multiplier);
+  document.querySelector<HTMLOutputElement>('#quick-scale-value')!.textContent = `${multiplier.toFixed(2)}×`;
+  updateInspector();
+  renderOnce();
+});
 
 document.querySelector<HTMLInputElement>('#object-name')!.addEventListener('change', (event) => {
   if (!selected) return;
