@@ -6,6 +6,8 @@ import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { PluginManager } from './plugins/PluginManager';
 import type { ElectronPluginApi } from './plugins/types';
 import primitivePack from './plugins/examples/primitive-pack';
+import { SandboxPluginHost, type ExternalPluginPackage } from './plugins/SandboxPluginHost';
+import { marketplacePackages } from './plugins/marketplace';
 
 type Quality = 'low' | 'balanced' | 'high';
 type Primitive = 'box' | 'sphere' | 'cylinder' | 'cone' | 'torus';
@@ -137,6 +139,12 @@ const pluginManager = new PluginManager({
   tools: { register: () => { throw new Error('Plugin tools must be registered through the Plugin Manager.'); } },
 });
 
+const sandboxPlugins = new SandboxPluginHost({
+  addPrimitive: (kind) => createObject(kind as Primitive),
+  getObjectCount: () => objects.length,
+  notify,
+});
+
 function renderPluginPanel() {
   const installed = pluginManager.list();
   pluginList.replaceChildren();
@@ -205,6 +213,50 @@ function renderPluginPanel() {
     pluginTools.append(button);
   }
 }
+
+
+function renderMarketplace() {
+  const root = document.querySelector<HTMLDivElement>('#marketplace-list')!;
+  root.replaceChildren();
+  for (const pkg of marketplacePackages) {
+    const row = document.createElement('div');
+    row.className = 'marketplace-card';
+    const details = document.createElement('div');
+    details.className = 'plugin-info';
+    const name = document.createElement('strong');
+    name.textContent = pkg.manifest.name;
+    const description = document.createElement('span');
+    description.textContent = pkg.manifest.description + ' · ' + pkg.manifest.permissions.join(', ');
+    details.append(name, description);
+    const button = document.createElement('button');
+    button.className = 'plugin-action';
+    button.textContent = sandboxPlugins.list().some((item) => item.manifest.id === pkg.manifest.id) ? 'Installed' : 'Install';
+    button.disabled = button.textContent === 'Installed';
+    button.addEventListener('click', async () => {
+      try {
+        await sandboxPlugins.install(pkg);
+        renderPluginPanel();
+        notify(pkg.manifest.name + ' installed in sandbox');
+      } catch (error) { notify(error instanceof Error ? error.message : 'Marketplace install failed'); }
+    });
+    row.append(details, button);
+    root.append(row);
+  }
+}
+
+document.querySelector<HTMLInputElement>('#plugin-file')!.addEventListener('change', async (event) => {
+  const input = event.currentTarget as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+  try {
+    if (file.size > 120_000) throw new Error('Plugin package must be smaller than 120 KB.');
+    const pkg = JSON.parse(await file.text()) as ExternalPluginPackage;
+    await sandboxPlugins.install(pkg);
+    renderPluginPanel();
+    notify('External plugin installed in sandbox');
+  } catch (error) { notify(error instanceof Error ? error.message : 'Invalid plugin package'); }
+  finally { input.value = ''; }
+});
 
 document.querySelector<HTMLButtonElement>('#open-plugins')!.addEventListener('click', () => {
   document.querySelector<HTMLDivElement>('#plugin-modal')!.classList.add('open');
@@ -461,5 +513,5 @@ resize();
 renderOnce();
 loadingOverlay.classList.add('hidden');
 document.querySelector<HTMLSpanElement>('#renderer-status')!.textContent = 'WEBGL 2 · ON-DEMAND RENDER';
-void pluginManager.install(primitivePack).then(renderPluginPanel).catch((error) => console.error('Demo plugin failed:', error));
+void Promise.all([pluginManager.install(primitivePack), sandboxPlugins.restore()]).then(renderPluginPanel).catch((error) => console.error('Plugin initialization failed:', error));
 notify('ELECTRON viewport initialized');
