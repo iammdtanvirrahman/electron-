@@ -149,6 +149,10 @@ const sandboxPlugins = new ExternalPluginManager({
 
 function renderPluginPanel() {
   const installed = pluginManager.list();
+  const sampleButton = document.querySelector<HTMLButtonElement>('#install-demo-plugin')!;
+  const sampleInstalled = installed.some((item) => item.manifest.id === 'electron.primitive-pack');
+  sampleButton.disabled = sampleInstalled;
+  sampleButton.textContent = sampleInstalled ? 'Installed' : 'Install sample';
   pluginList.replaceChildren();
   if (!installed.length) {
     pluginList.textContent = 'No plugins installed.';
