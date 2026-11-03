@@ -22,6 +22,7 @@
           <span class="saved-label">LOCAL</span>
         </div>
         <div class="topbar-actions">
+          <button class="button button-quiet" id="open-plugins">Plugins</button>
           <button class="button button-quiet" id="reset-view">Reset view</button>
           <button class="button button-primary" id="export-glb"><span>↓</span> Export GLB</button>
         </div>
@@ -137,6 +138,16 @@
           </div>
         </aside>
       </main>
+      <div id="plugin-modal" class="plugin-modal" role="dialog" aria-modal="true" aria-labelledby="plugin-title">
+        <div class="plugin-dialog">
+          <div class="plugin-dialog-header"><div><div class="section-title">EXTENSIONS</div><h2 id="plugin-title">Plugin Manager</h2></div><button id="close-plugins" class="icon-button" aria-label="Close plugin manager">×</button></div>
+          <p class="plugin-intro">Extend ELECTRON with independent tools. Plugins run with only the permissions declared in their manifest.</p>
+          <div class="plugin-subheading">INSTALLED PLUGINS</div><div id="plugin-list" class="plugin-list"></div>
+          <div class="plugin-subheading">PLUGIN TOOLS</div><div id="plugin-tools" class="plugin-tools"></div>
+          <div class="plugin-install-row"><div><strong>Developer sample</strong><span>Primitive Pack · adds a torus tool</span></div><button id="install-demo-plugin" class="button button-primary">Install sample</button></div>
+          <p class="plugin-security">Security: only install plugins from developers you trust. The current SDK is a permission-scoped extension API, not yet an isolated third-party marketplace runtime.</p>
+        </div>
+      </div>
       <div id="toast" class="toast" role="status"></div>
     </div>
     <script type="module" src="/src/main.ts"></script>
