@@ -82,3 +82,36 @@ export default plugin;
 Install a bundled plugin with `pluginManager.install(plugin)`. The SDK validates manifest IDs and permission names, scopes API access to declared permissions, and removes registered tools when a plugin is disabled.
 
 **Security note:** this first milestone is intended for bundled or developer-trusted plugins. Permission-scoped APIs are not a substitute for a true sandbox. Loading arbitrary third-party JavaScript, remote marketplace packages, filesystem access and network access are deliberately not enabled yet. Those require an isolated runtime, package signing, review and stronger capability controls.
+
+
+## External plugin packages and marketplace (v0.3)
+
+External plugins use a JSON package with a manifest and a JavaScript activation function expression. Import a package from **Plugins → Choose package**, or install a curated example from the in-app Community Marketplace.
+
+Example package structure:
+
+```json
+{
+  "manifest": {
+    "id": "community.shape-tools",
+    "name": "Shape Tools",
+    "version": "1.0.0",
+    "description": "Adds shape creation tools",
+    "author": "Your name",
+    "permissions": ["scene:write", "ui:notify"]
+  },
+  "code": "(api) => { api.tools.register({ id: 'add-torus', name: 'Add Torus', description: 'Create a torus', run: async () => { await api.scene.addPrimitive('torus'); await api.ui.notify('Torus created'); } }); }"
+}
+```
+
+### Sandbox and permissions
+
+- External code runs in a sandboxed iframe with an opaque origin.
+- A restrictive Content Security Policy blocks network connections and external resources.
+- No same-origin, top-navigation, popups, filesystem or direct DOM access is granted.
+- Host operations are exposed through a small message-based RPC bridge.
+- Every host operation checks the plugin's declared permissions.
+- Package size is capped; installed packages are persisted locally in browser storage.
+- Built-in and external plugins are listed separately in Plugin Manager.
+
+The marketplace in this milestone is a curated, bundled catalog rather than a public remote registry. External package import is supported, but packages are not cryptographically signed or automatically reviewed. Install only code you trust. A browser iframe sandbox is defense-in-depth and should not be treated as a perfect security boundary.
