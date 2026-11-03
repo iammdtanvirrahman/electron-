@@ -6,7 +6,7 @@ import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { PluginManager } from './plugins/PluginManager';
 import type { ElectronPluginApi } from './plugins/types';
 import primitivePack from './plugins/examples/primitive-pack';
-import { IsolatedPluginHost, type ExternalPluginPackage } from './plugins/IsolatedPluginHost';
+
 import { marketplacePackages } from './plugins/marketplace';
 
 type Quality = 'low' | 'balanced' | 'high';
@@ -139,7 +139,7 @@ const pluginManager = new PluginManager({
   tools: { register: () => { throw new Error('Plugin tools must be registered through the Plugin Manager.'); } },
 });
 
-const sandboxPlugins = new IsolatedPluginHost({
+const sandboxPlugins = new ExternalPluginManager({
   addPrimitive: (kind) => createObject(kind as Primitive),
   getObjectCount: () => objects.length,
   notify,
@@ -297,7 +297,7 @@ document.querySelector<HTMLInputElement>('#plugin-file')!.addEventListener('chan
   if (!file) return;
   try {
     if (file.size > 120_000) throw new Error('Plugin package must be smaller than 120 KB.');
-    const pkg = JSON.parse(await file.text()) as ExternalPluginPackage;
+    const pkg = JSON.parse(await file.text()) as DeclarativePluginPackage;
     await sandboxPlugins.install(pkg);
     renderPluginPanel();
     notify('External plugin installed in sandbox');
